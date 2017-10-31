@@ -5,8 +5,8 @@
 uint32_t pixelHSVtoRGBColor(float hue, float saturation, float value) {
   // Implemented from algorithm at http://en.wikipedia.org/wiki/HSL_and_HSV#From_HSV
   float chroma = value * saturation;
-  float h1 = float(hue)/60.0;
-  float x = chroma*(1.0-fabs(fmod(h1, 2.0)-1.0));
+  float h1 = float(hue) / 60.0;
+  float x = chroma * (1.0 - fabs(fmod(h1, 2.0) - 1.0));
   float r = 0;
   float g = 0;
   float b = 0;
@@ -39,14 +39,32 @@ uint32_t pixelHSVtoRGBColor(float hue, float saturation, float value) {
   r += m;
   g += m;
   b += m;
-  return Color(int(255*r), int(255*g), int(255*b));
+  return Color(int(255 * r), int(255 * g), int(255 * b));
 }
 
-int getMax(float* array, int size){
+// Returns the Red component of a 32-bit color
+uint8_t Red(uint32_t color)
+{
+  return (color >> 16) & 0xFF;
+}
+
+// Returns the Green component of a 32-bit color
+uint8_t Green(uint32_t color)
+{
+  return (color >> 8) & 0xFF;
+}
+
+// Returns the Blue component of a 32-bit color
+uint8_t Blue(uint32_t color)
+{
+  return color & 0xFF;
+}
+
+int getMax(float* array, int size) {
   int maxIndex = 0;
   int max = array[maxIndex];
-  for (int i=1; i<size; i++){
-    if (max<array[i]){
+  for (int i = 1; i < size; i++) {
+    if (max < array[i]) {
       max = array[i];
       maxIndex = i;
     }
@@ -59,4 +77,31 @@ uint32_t Color(byte r, byte g, byte b) {
   g = pgm_read_byte(&gammatable[g]);
   b = pgm_read_byte(&gammatable[b]);
   return r << 16 | g << 8 | b;
+}
+
+float runningAverage(float alpha, int M) {
+  static float accum = 0;
+  
+  accum = (alpha * M) + (1.0 - alpha) * accum;
+
+  return accum;
+}
+
+int fps() {
+  // Create static variables so that the code and variables can
+  // all be declared inside a function
+  static unsigned long lastMillis;
+  static unsigned long frameCount;
+  static unsigned int framesPerSecond;
+
+  // It is best if we declare millis() only once
+  unsigned long now = millis();
+  frameCount ++;
+  if (now - lastMillis >= 5000) {
+    framesPerSecond = frameCount / 5;
+    Serial.printf("fps: %4d", framesPerSecond);
+    frameCount = 0;
+    lastMillis = now;
+  }
+  return framesPerSecond;
 }
